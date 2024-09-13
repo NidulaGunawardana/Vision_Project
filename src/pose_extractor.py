@@ -8,7 +8,7 @@ from src.correspondences import chunk_cosine_sim
 from sklearn.cluster import KMeans
 import numpy as np
 import time
-from external.kmeans_pytorch.kmeans_pytorch import kmeans
+from kmeans_pytorch import kmeans
 
 
 
@@ -150,13 +150,13 @@ class PoseViTExtractor(extractor.ViTExtractor):
         
         start_time_kmeans = time.time()
         #'euclidean'
-        # cluster_ids_x, cluster_centers = kmeans(X = normalized, num_clusters=n_clusters, distance='cosine', device=self.device)
-        cluster_ids_x, cluster_centers = kmeans(X = normalized, 
-                                        num_clusters=n_clusters, 
-                                        distance='cosine',
-                                        tqdm_flag = False,
-                                        iter_limit=200, 
-                                        device=self.device)
+        cluster_ids_x, cluster_centers = kmeans(X = normalized, num_clusters=n_clusters, distance='cosine', device=self.device)
+        # cluster_ids_x, cluster_centers = kmeans(X = normalized, 
+        #                                 num_clusters=n_clusters, 
+        #                                 distance='cosine',
+        #                                 tqdm_flag = False,
+        #                                 iter_limit=200, 
+        #                                 device=self.device)
         
         kmeans_labels = cluster_ids_x.detach().cpu().numpy()
         
