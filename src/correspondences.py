@@ -246,6 +246,8 @@ def draw_correspondences(points1: List[Tuple[float, float]], points2: List[Tuple
         circ2_2 = plt.Circle((x2, y2), radius2, facecolor=color, edgecolor='white')
         ax2.add_patch(circ2_1)
         ax2.add_patch(circ2_2)
+        
+    
     return fig1, fig2
 
 
