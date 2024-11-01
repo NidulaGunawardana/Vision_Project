@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description='Test pose estimation inference on test set')
-    parser.add_argument('--config_file', default="./zs6d_configs/bop_eval_configs/cfg_lmo_inference_bop.json")
+    parser.add_argument('--config_file', default="./zs6d_configs/bop_eval_configs/cfg_ycbv_inference_bop.json")
 
     args = parser.parse_args()
 
@@ -83,9 +83,10 @@ if __name__=="__main__":
     
     print("Processing input images:")
     for all_id, img_labels in tqdm(data_gt.items()):
+        
         scene_id = all_id.split("_")[0]
         img_id = all_id.split("_")[-1]
-        
+        print(f"Processing image {img_id} in scene {scene_id}............\n")
         # get data and crops for a single image
         
         img_path = os.path.join(config['dataset_path'], img_labels[0]['img_name'].split("./")[-1])
@@ -110,6 +111,7 @@ if __name__=="__main__":
                                   masks = [])
 
         for obj_index, img_label in enumerate(img_labels):
+            print(f"Processing object {obj_index}............\n")
             bbox_gt = img_label[config['bbox_type']]
 
             if bbox_gt[2] == 0 or bbox_gt[3] == 0:
@@ -148,6 +150,7 @@ if __name__=="__main__":
                     img_data.y_offsets.append(y_offset)
                     img_data.x_offsets.append(x_offset)
                     img_data.masks.append(mask_3_channel)
+                    
                         
                 except Exception as e:
                     logger.warning(f"Loading mask and extracting descriptor failed for img {img_path} and object_id {obj_index}: {e}")
@@ -156,8 +159,10 @@ if __name__=="__main__":
                     img_data.y_offsets.append(None)
                     img_data.x_offsets.append(None)
                     img_data.masks.append(None)
+                print(f"{scene_id} processed............")
                         
         for i in range(len(img_data.crops)):
+            print(f"Processing image {img_data.img_name} and object_id {img_data.obj_ids[i]}............\n")
             start_time = time.time()
             object_id = img_data.obj_ids[i]
             if img_data.crops[i] is not None:
@@ -171,6 +176,7 @@ if __name__=="__main__":
                 min_err = np.inf
                 pose_est = False
                 for matched_template in matched_templates:
+                    print(f"Template matched for {img_data.img_name} and object_id {object_id}............\n")
 
                     template = Image.open(templates_gt_new[object_id][matched_template[1]]['img_crop'])
 
@@ -183,7 +189,7 @@ if __name__=="__main__":
                     except Exception as e:
                         logging.error(f"Local correspondence matching failed for {img_data.img_name} and object_id {img_data.obj_ids[i]}: {e}")
                             
-                                        
+                    print(f"Correspondences found: {len(points1)}\n")                    
                     try:
                         img_uv = np.load(templates_gt_new[object_id][matched_template[1]]['uv_crop'])
                         
@@ -199,10 +205,11 @@ if __name__=="__main__":
                                                                         img_data.cam_K,
                                                                         norm_factors[str(img_data.obj_ids[i])],
                                                                         config['scale_factor'])
+                    
                     except Exception as e:
                         logger.error(f"Not enough correspondences could be extracted for {img_data.img_name} and object_id {object_id}: {e}")
                         R_est = None
-                    
+                    print(f"Pose estimated for {img_data.img_name} and object_id {object_id}............\n")
 
                     if R_est is None:
                         R_est = np.array(templates_gt_new[object_id][matched_template[1]]['cam_R_m2c']).reshape((3,3))
@@ -216,6 +223,8 @@ if __name__=="__main__":
                         R_best = R_est
                         t_best = t_est
                         pose_est = True
+                        score = acc
+                    print(f"{scene_id} estimated............\n")
                 
                 if not pose_est:
                     R_best = np.array([[1.0,0.,0.],
@@ -237,7 +246,8 @@ if __name__=="__main__":
                 logger.warning(f"No Pose could be determined for {img_data.img_name} and object_id {object_id} because no object crop available")
                 score = 0.
 
-                
+            print(f"Image {img_data.img_name} and object_id {object_id} processed in {end_time-start_time} seconds............\n")
+               
                 
             # Prepare for writing:
             R_best_str = " ".join(map(str, R_best.flatten()))
@@ -250,7 +260,7 @@ if __name__=="__main__":
                 csv_writer = csv.writer(csvfile)
                 csv_writer.writerow([img_data.scene_id, img_data.img_name, object_id, score, R_best_str, t_best_str, elapsed_time])
 
-
+            print(f"Results written to {csv_file}............\n")
             if config['debug_imgs']:
                 if i % config['debug_imgs'] == 0: 
                     dbg_img = vis_utils.create_debug_image(R_best, t_best, img_data.R_gts[i], img_data.t_gts[i], 
@@ -269,6 +279,9 @@ if __name__=="__main__":
                         dbg_img_mask = dbg_img   
                         
                     cv2.imwrite(os.path.join(debug_img_path, f"{img_data.img_name}_{img_data.obj_ids[i]}.png"), dbg_img_mask)
+                    print(f"Debug image saved to {os.path.join(debug_img_path, f'{img_data.img_name}_{img_data.obj_ids[i]}.png')}............\n")
+            print(f"{img_data.img_name} and object_id {object_id} processed............\n")
+    print("All images processed............\n")
             
 
                 

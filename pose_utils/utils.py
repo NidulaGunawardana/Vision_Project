@@ -12,6 +12,7 @@ from scipy.spatial.distance import cosine
 def find_template(desc_input, desc_templates, num_results):
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Device: {device}")
     # device = "cpu"
     desc_input = desc_input.to(device)
     desc_templates = desc_templates.to(device)
@@ -188,7 +189,7 @@ def get_pose_from_correspondences(points1, points2, y_offset, x_offset, img_uv, 
 
     try:
         retval, rvec, tvec, inliers = cv2.solvePnPRansac(np.array(points2_3D).astype(np.float64), valid_points1, cam_K,
-                                                        distCoeffs=None, iterationsCount=100, reprojectionError=8.0)
+                                                        distCoeffs=None, iterationsCount=150, reprojectionError=8.0)
     
     except:
         print("Solving PnP failed!")

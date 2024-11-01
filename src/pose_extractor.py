@@ -83,7 +83,7 @@ class PoseViTExtractor(extractor.ViTExtractor):
         return descs
     
     
-    def find_correspondences_fastkmeans(self, pil_img1, pil_img2, num_pairs: int = 10, load_size: int = 224, 
+    def find_correspondences_fastkmeans(self, pil_img1, pil_img2, num_pairs: int = 10, load_size: int = 100, 
                              layer: int = 9, facet: str = 'key', bin: bool = True, 
                              thresh: float = 0.05) -> Tuple[List[Tuple[float, float]], List[Tuple[float, float]], Image.Image, Image.Image]:
         
@@ -175,6 +175,7 @@ class PoseViTExtractor(extractor.ViTExtractor):
 
         for k in range(n_clusters):
             for i, (label, rank) in enumerate(zip(kmeans_labels, ranks)):
+                print(f"rank: {rank}")
                 if rank > bb_topk_sims[label]:
                     bb_topk_sims[label] = rank
                     bb_indices_to_show[label] = i
